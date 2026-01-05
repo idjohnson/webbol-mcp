@@ -92,6 +92,19 @@ IDENTIFICATION DIVISION.
       *>       DISPLAY "Extracted path: '" REQUEST-PATH(1:50) "'"
            END-IF
 
+*> Check if this is an MCP request (POST or GET to /mcp)
+           DISPLAY "Extracted path: '" REQUEST-PATH(1:WS-PATH-LEN) "'"
+           IF REQUEST-PATH(1:4) = "/mcp" OR 
+              REQUEST-PATH(1:5) = "/mcp " OR
+              REQUEST-PATH(1:5) = "/mcp\x0d" OR
+              REQUEST-PATH(1:5) = "/mcp\x0a"
+               DISPLAY "Routing to MCP-HANDLER"
+               CALL "MCP-HANDLER" USING LS-REQUEST-BUF
+                                       LS-RESPONSE-BUF
+                                       LS-RESPONSE-LEN
+               GOBACK
+           END-IF
+
 *> Decode URL-encoded characters (e.g., %20 -> space)
            CALL "URL-DECODE" USING REQUEST-PATH WS-DECODED-PATH
 

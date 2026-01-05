@@ -22,3 +22,34 @@
        01 CONTENT-TYPE-HDR     PIC X(100).
 *> Content-Length header value (e.g., "1024")
        01 CONTENT-LENGTH-HDR   PIC X(50).
+
+*> MCP (Model Context Protocol) specific structures
+*> JSON-RPC request structure
+       01 MCP-REQUEST.
+          05 MCP-REQ-METHOD    PIC X(30).
+          05 MCP-REQ-ID        PIC 9(9) COMP VALUE 0.
+          05 MCP-REQ-PARAMS    PIC X(2048).
+
+*> JSON-RPC response structure
+       01 MCP-RESPONSE.
+          05 MCP-RESP-ID       PIC 9(9) COMP VALUE 0.
+          05 MCP-RESP-STATUS   PIC X(10).
+          05 MCP-RESP-BODY     PIC X(8192).
+          05 MCP-RESP-LEN      PIC 9(8) COMP-5 VALUE 0.
+
+*> MCP server capabilities
+       01 MCP-CAPABILITIES.
+          05 CAP-TOOLS         PIC X(10) VALUE "true".
+          05 CAP-LOGGING       PIC X(10) VALUE "false".
+          05 CAP-RESOURCES     PIC X(10) VALUE "false".
+
+*> Session tracking
+       01 MCP-SESSION.
+          05 SESSION-ID        PIC X(36) VALUE SPACES.
+          05 SESSION-INITIALIZED PIC X VALUE "N".
+
+*> MCP utility fields
+       01 MCP-UTIL.
+          05 MCP-REQUEST-LEN   PIC 9(4) COMP VALUE 0.
+          05 MCP-IS-MCP-CALL   PIC X VALUE "N".
+          05 MCP-CRLF          PIC XX VALUE X"0D0A".
