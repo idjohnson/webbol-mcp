@@ -76,6 +76,8 @@ IDENTIFICATION DIVISION.
                    MOVE "image/x-icon" TO LS-MIME-TYPE
                WHEN "pdf "
                    MOVE "application/pdf" TO LS-MIME-TYPE
+               WHEN OTHER
+                   MOVE "application/octet-stream" TO LS-MIME-TYPE
            END-EVALUATE
            
            GOBACK.

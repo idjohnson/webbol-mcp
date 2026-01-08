@@ -110,6 +110,41 @@ IDENTIFICATION DIVISION.
                GOBACK
            END-IF
 
+           DISPLAY "DEBUG: Method='" REQUEST-METHOD "'"
+           DISPLAY "DEBUG: Path='" FUNCTION TRIM(SANITIZED-PATH) "'"
+
+           EVALUATE REQUEST-METHOD
+               WHEN "OPTIONS"
+                   PERFORM BUILD-OPTIONS-RESPONSE
+               WHEN "GET"
+                   EVALUATE FUNCTION TRIM(SANITIZED-PATH)
+                       WHEN "/"
+                           PERFORM BUILD-DISCOVERY-RESPONSE
+                       WHEN "/discovery"
+                           PERFORM BUILD-DISCOVERY-RESPONSE
+                       WHEN "index.html"
+                           PERFORM BUILD-DISCOVERY-RESPONSE
+                       WHEN OTHER
+                           PERFORM HANDLE-FILE-REQUEST
+                   END-EVALUATE
+               WHEN "POST"
+                   EVALUATE FUNCTION TRIM(SANITIZED-PATH)
+                       WHEN "/"
+                           PERFORM BUILD-DISCOVERY-RESPONSE
+                       WHEN "/discovery"
+                           PERFORM BUILD-DISCOVERY-RESPONSE
+                       WHEN "index.html"
+                           PERFORM BUILD-DISCOVERY-RESPONSE
+                       WHEN OTHER
+                           PERFORM BUILD-405-RESPONSE
+                   END-EVALUATE
+               WHEN OTHER
+                   PERFORM BUILD-405-RESPONSE
+           END-EVALUATE
+           
+           GOBACK.
+       
+       HANDLE-FILE-REQUEST.
 *> Attempt to read the requested file
            CALL "FILE-OPS" USING SANITIZED-PATH FILE-BUFFER
                                  FILE-SIZE WS-RETURN-CODE
@@ -233,6 +268,62 @@ IDENTIFICATION DIVISION.
            END-STRING
 
 *> Calculate total response length for sending
+           INSPECT LS-RESPONSE-BUF TALLYING LS-RESPONSE-LEN
+               FOR CHARACTERS BEFORE INITIAL LOW-VALUE
+           .
+
+       BUILD-OPTIONS-RESPONSE.
+           STRING "HTTP/1.1 204 No Content" DELIMITED BY SIZE
+                  WS-CRLF DELIMITED BY SIZE
+                  "Access-Control-Allow-Origin: *" DELIMITED BY SIZE
+                  WS-CRLF DELIMITED BY SIZE
+                  "Access-Control-Allow-Methods: POST, GET, OPTIONS"
+                  DELIMITED BY SIZE
+                  WS-CRLF DELIMITED BY SIZE
+                  "Access-Control-Allow-Headers: Content-Type"
+                  DELIMITED BY SIZE
+                  WS-CRLF DELIMITED BY SIZE
+                  "Access-Control-Max-Age: 86400" DELIMITED BY SIZE
+                  WS-CRLF DELIMITED BY SIZE
+                  WS-CRLF DELIMITED BY SIZE
+                  INTO LS-RESPONSE-BUF
+           END-STRING
+
+           INSPECT LS-RESPONSE-BUF TALLYING LS-RESPONSE-LEN
+               FOR CHARACTERS BEFORE INITIAL LOW-VALUE
+           .
+
+       BUILD-DISCOVERY-RESPONSE.
+           STRING "HTTP/1.1 200 OK" DELIMITED BY SIZE
+                  WS-CRLF DELIMITED BY SIZE
+                  "Content-Type: application/json" DELIMITED BY SIZE
+                  WS-CRLF DELIMITED BY SIZE
+                  "Content-Length: 89" DELIMITED BY SIZE
+                  WS-CRLF DELIMITED BY SIZE
+                  WS-CRLF DELIMITED BY SIZE
+                  '{"jsonrpc":"2.0","id":1,"result":'
+                  '{"name":"cobolServer","version":"1.0.0","methods":[]}}'
+                      DELIMITED BY SIZE
+                  INTO LS-RESPONSE-BUF
+           END-STRING
+
+           INSPECT LS-RESPONSE-BUF TALLYING LS-RESPONSE-LEN
+               FOR CHARACTERS BEFORE INITIAL LOW-VALUE
+           .
+
+       BUILD-405-RESPONSE.
+           STRING "HTTP/1.1 405 Method Not Allowed" DELIMITED BY SIZE
+                  WS-CRLF DELIMITED BY SIZE
+                  "Content-Type: text/html" DELIMITED BY SIZE
+                  WS-CRLF DELIMITED BY SIZE
+                  "Content-Length: 57" DELIMITED BY SIZE
+                  WS-CRLF DELIMITED BY SIZE
+                  WS-CRLF DELIMITED BY SIZE
+                  "<html><body><h1>405 Method Not Allowed</h1></body></html>"
+                      DELIMITED BY SIZE
+                  INTO LS-RESPONSE-BUF
+           END-STRING
+
            INSPECT LS-RESPONSE-BUF TALLYING LS-RESPONSE-LEN
                FOR CHARACTERS BEFORE INITIAL LOW-VALUE
            .
