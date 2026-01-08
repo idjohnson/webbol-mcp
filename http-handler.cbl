@@ -118,22 +118,22 @@ IDENTIFICATION DIVISION.
                    PERFORM BUILD-OPTIONS-RESPONSE
                WHEN "GET"
                    EVALUATE FUNCTION TRIM(SANITIZED-PATH)
-                       WHEN "/"
-                           PERFORM BUILD-DISCOVERY-RESPONSE
-                       WHEN "/discovery"
-                           PERFORM BUILD-DISCOVERY-RESPONSE
                        WHEN "index.html"
+                           PERFORM BUILD-DISCOVERY-RESPONSE
+                       WHEN "discovery"
+                           PERFORM BUILD-DISCOVERY-RESPONSE
+                       WHEN "mcp"
                            PERFORM BUILD-DISCOVERY-RESPONSE
                        WHEN OTHER
                            PERFORM HANDLE-FILE-REQUEST
                    END-EVALUATE
                WHEN "POST"
                    EVALUATE FUNCTION TRIM(SANITIZED-PATH)
-                       WHEN "/"
-                           PERFORM BUILD-DISCOVERY-RESPONSE
-                       WHEN "/discovery"
-                           PERFORM BUILD-DISCOVERY-RESPONSE
                        WHEN "index.html"
+                           PERFORM BUILD-DISCOVERY-RESPONSE
+                       WHEN "discovery"
+                           PERFORM BUILD-DISCOVERY-RESPONSE
+                       WHEN "mcp"
                            PERFORM BUILD-DISCOVERY-RESPONSE
                        WHEN OTHER
                            PERFORM BUILD-405-RESPONSE
@@ -214,7 +214,7 @@ IDENTIFICATION DIVISION.
        
 *> Build HTTP 404 Not Found response
        BUILD-404-RESPONSE.
-*> Create complete HTTP response with headers and HTML body
+           MOVE LOW-VALUE TO LS-RESPONSE-BUF
            STRING "HTTP/1.1 404 Not Found" DELIMITED BY SIZE
                   WS-CRLF DELIMITED BY SIZE
                   "Content-Type: text/html" DELIMITED BY SIZE
@@ -227,14 +227,13 @@ IDENTIFICATION DIVISION.
                   INTO LS-RESPONSE-BUF
            END-STRING
 
-*> Calculate total response length for sending
            INSPECT LS-RESPONSE-BUF TALLYING LS-RESPONSE-LEN
                FOR CHARACTERS BEFORE INITIAL LOW-VALUE
            .
        
 *> Build HTTP 403 Forbidden response (for security violations)
        BUILD-403-RESPONSE.
-*> Create complete HTTP response for path traversal attempts
+           MOVE LOW-VALUE TO LS-RESPONSE-BUF
            STRING "HTTP/1.1 403 Forbidden" DELIMITED BY SIZE
                   WS-CRLF DELIMITED BY SIZE
                   "Content-Type: text/html" DELIMITED BY SIZE
@@ -247,14 +246,13 @@ IDENTIFICATION DIVISION.
                   INTO LS-RESPONSE-BUF
            END-STRING
 
-*> Calculate total response length for sending
            INSPECT LS-RESPONSE-BUF TALLYING LS-RESPONSE-LEN
                FOR CHARACTERS BEFORE INITIAL LOW-VALUE
            .
 
 *> Build HTTP 413 Payload Too Large response (for oversized files)
        BUILD-413-RESPONSE.
-*> Create complete HTTP response for files exceeding buffer size
+           MOVE LOW-VALUE TO LS-RESPONSE-BUF
            STRING "HTTP/1.1 413 Payload Too Large" DELIMITED BY SIZE
                   WS-CRLF DELIMITED BY SIZE
                   "Content-Type: text/html" DELIMITED BY SIZE
@@ -267,12 +265,12 @@ IDENTIFICATION DIVISION.
                   INTO LS-RESPONSE-BUF
            END-STRING
 
-*> Calculate total response length for sending
            INSPECT LS-RESPONSE-BUF TALLYING LS-RESPONSE-LEN
                FOR CHARACTERS BEFORE INITIAL LOW-VALUE
            .
 
        BUILD-OPTIONS-RESPONSE.
+           MOVE LOW-VALUE TO LS-RESPONSE-BUF
            STRING "HTTP/1.1 204 No Content" DELIMITED BY SIZE
                   WS-CRLF DELIMITED BY SIZE
                   "Access-Control-Allow-Origin: *" DELIMITED BY SIZE
@@ -294,11 +292,12 @@ IDENTIFICATION DIVISION.
            .
 
        BUILD-DISCOVERY-RESPONSE.
+           MOVE LOW-VALUE TO LS-RESPONSE-BUF
            STRING "HTTP/1.1 200 OK" DELIMITED BY SIZE
                   WS-CRLF DELIMITED BY SIZE
                   "Content-Type: application/json" DELIMITED BY SIZE
                   WS-CRLF DELIMITED BY SIZE
-                  "Content-Length: 89" DELIMITED BY SIZE
+                  "Content-Length: 87" DELIMITED BY SIZE
                   WS-CRLF DELIMITED BY SIZE
                   WS-CRLF DELIMITED BY SIZE
                   '{"jsonrpc":"2.0","id":1,"result":'
@@ -312,6 +311,7 @@ IDENTIFICATION DIVISION.
            .
 
        BUILD-405-RESPONSE.
+           MOVE LOW-VALUE TO LS-RESPONSE-BUF
            STRING "HTTP/1.1 405 Method Not Allowed" DELIMITED BY SIZE
                   WS-CRLF DELIMITED BY SIZE
                   "Content-Type: text/html" DELIMITED BY SIZE
